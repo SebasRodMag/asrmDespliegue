@@ -1,0 +1,74 @@
+version: "3.9"
+
+networks:
+  web: {}
+
+volumes:
+  traefik_letsencrypt: {}
+
+services:
+  traefik:
+    image: traefik:v2.11
+    container_name: traefik
+    restart: unless-stopped
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      - --certificatesresolvers.le.acme.email=${LETSENCRYPT_EMAIL}
+      - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.le.acme.httpchallenge=true
+      - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
+    ports:
+      - "80:80"
+      - "443:443"
+    networks: [web]
+    volumes:
+      - traefik_letsencrypt:/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  web-personal:
+    image: nginx:alpine
+    container_name: web-personal
+    restart: unless-stopped
+    networks: [web]
+    volumes:
+      - ./web-personal:/usr/share/nginx/html:ro
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.personal.rule=Host(`${DOMAIN}`) && PathPrefix(`/`)
+      - traefik.http.routers.personal.entrypoints=websecure
+      - traefik.http.routers.personal.tls.certresolver=le
+      - traefik.http.routers.personal.priority=1
+
+  presentacion:
+    image: nginx:alpine
+    container_name: presentacion
+    restart: unless-stopped
+    networks: [web]
+    volumes:
+      - ./presentacion:/usr/share/nginx/html/presentacion:ro
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.presentacion.rule=Host(`${DOMAIN}`) && PathPrefix(`/presentacion`)
+      - traefik.http.routers.presentacion.entrypoints=websecure
+      - traefik.http.routers.presentacion.tls.certresolver=le
+      - traefik.http.routers.presentacion.priority=10
+
+  clinicavm-frontend:
+    image: nginx:alpine
+    container_name: clinicavm-frontend
+    restart: unless-stopped
+    networks: [web]
+    volumes:
+      - ./clinicavm/dist:/usr/share/nginx/html:ro
+      - ./clinicavm/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.clinicavm.rule=Host(`${DOMAIN}`) && PathPrefix(`/clinicavm`)
+      - traefik.http.routers.clinicavm.entrypoints=websecure
+      - traefik.http.routers.clinicavm.tls.certresolver=le
+      - traefik.http.routers.clinicavm.priority=20
