@@ -58,7 +58,7 @@ services:
 
 #FRONTEND Angular servido en /clinicamv
   clinicamv-frontend:
-    image: ghcr.io/SebasRodMag/clinicamv-frontend:main
+    image: ghcr.io/sebasrodmag/clinicamv-frontend:main
     container_name: clinicamv-frontend
     restart: unless-stopped
     networks: [web]
@@ -70,7 +70,7 @@ services:
       - traefik.http.routers.clinicamv.priority=20
 
   clinicamv-php:
-    image: ghcr.io/SebasRodMag/clinicamv-php:main
+    image: ghcr.io/sebasrodmag/clinicamv-php:main
     container_name: clinicamv-php
     restart: unless-stopped
     networks: [web]
@@ -78,7 +78,7 @@ services:
       APP_ENV: production
 
   clinicamv-api:
-    image: ghcr.io/SebasRodMag/clinicamv-api:main
+    image: ghcr.io/sebasrodmag/clinicamv-api:main
     container_name: clinicamv-api
     restart: unless-stopped
     depends_on: [clinicamv-php]
