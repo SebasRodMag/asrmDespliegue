@@ -84,6 +84,7 @@ services:
     depends_on: [clinicamv-php]
     networks: [web]
     volumes:
+      - ./despliegue-assrm/php/zzz-listen.conf:/usr/local/etc/php-fpm.d/zzz-listen.conf:ro
       - ./despliegue-asrm/api/nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ./api/nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ./api/app:/var/www/html:ro
