@@ -71,7 +71,7 @@ services:
 
   clinicamv-php:
     image: ghcr.io/sebasrodmag/clinicamv-php:main
-    command: ["php-fpm","-F"]
+    entrypoint: ["php-fpm","-F"]
     volumes:
       - ./despliegue-assrm/php/zzz-listen.conf:/usr/local/etc/php-fpm.d/zzz-listen.conf:ro
     container_name: clinicamv-php
@@ -87,9 +87,7 @@ services:
     depends_on: [clinicamv-php]
     networks: [web]
     volumes:
-      - ./despliegue-asrm/api/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./api/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./api/app:/var/www/html:ro
+      - ./despliegue-assrm/api/nginx.conf:/etc/nginx/conf.d/default.conf:ro   # 👈 solo este
     labels:
       - traefik.enable=true
       - traefik.http.routers.clinicamv_api.rule=Host(`${DOMAIN}`) && PathPrefix(`/clinicamv/api`)
