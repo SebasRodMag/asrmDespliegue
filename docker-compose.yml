@@ -75,6 +75,7 @@ services:
     command: ["php-fpm","-F"]
     volumes:
       - ./despliegue-asrm/php/www.conf:/usr/local/etc/php-fpm.d/www.conf:ro
+      - ./despliegue-asrm/laravel/.env.prod:/var/www/.env:ro
     container_name: clinicamv-php
     restart: unless-stopped
     networks: [web]
