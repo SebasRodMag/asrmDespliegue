@@ -87,7 +87,7 @@ services:
     depends_on: [clinicamv-php]
     networks: [web]
     volumes:
-      - ./despliegue-asrm/api/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./despliegue-asrm/api:/etc/nginx/conf.d:ro
     labels:
       - traefik.enable=true
       - traefik.http.routers.clinicamv_api.rule=Host(`${DOMAIN}`) && PathPrefix(`/clinicamv/api`)
