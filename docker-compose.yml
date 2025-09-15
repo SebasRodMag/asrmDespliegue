@@ -3,6 +3,7 @@ networks:
 
 volumes:
   traefik_letsencrypt: {}
+  mysql_data: {}                 # 👈 volumen declarado arriba (no dentro de servicios)
 
 services:
   traefik:
@@ -56,7 +57,7 @@ services:
       - traefik.http.routers.presentacion.tls.certresolver=le
       - traefik.http.routers.presentacion.priority=10
 
-#FRONTEND Angular servido en /clinicamv
+  # FRONTEND Angular servido en /clinicamv
   clinicamv-frontend:
     image: ghcr.io/sebasrodmag/clinicamv-frontend:main
     container_name: clinicamv-frontend
@@ -69,36 +70,6 @@ services:
       - traefik.http.routers.clinicamv.tls.certresolver=le
       - traefik.http.routers.clinicamv.priority=20
 
-  clinicamv-php:
-    image: ghcr.io/sebasrodmag/clinicamv-php:main
-    entrypoint: []
-    command: ["php-fpm","-F"]
-    volumes:
-      - ./despliegue-asrm/php/www.conf:/usr/local/etc/php-fpm.d/www.conf:ro
-      - ./despliegue-asrm/laravel/.env.prod:/var/www/.env:ro
-    container_name: clinicamv-php
-    restart: unless-stopped
-    networks: [web]
-    environment:
-      APP_ENV: production
-
-  clinicamv-api:
-    image: ghcr.io/sebasrodmag/clinicamv-api:main
-    container_name: clinicamv-api
-    restart: unless-stopped
-    depends_on: [clinicamv-php]
-    networks: [web]
-    volumes:
-      - ./despliegue-asrm/api:/etc/nginx/conf.d:ro
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.clinicamv_api.rule=Host(`${DOMAIN}`) && PathPrefix(`/clinicamv/api`)
-      - traefik.http.routers.clinicamv_api.entrypoints=websecure
-      - traefik.http.routers.clinicamv_api.tls.certresolver=le
-      - traefik.http.middlewares.strip-clinicamv.stripprefix.prefixes=/clinicamv
-      - traefik.http.routers.clinicamv_api.middlewares=strip-clinicamv
-      - traefik.http.routers.clinicamv_api.priority=30
-
   mysql:
     image: mysql:8.0
     container_name: mysql
@@ -109,10 +80,45 @@ services:
       MYSQL_USER: clinica
       MYSQL_PASSWORD: clinica
       MYSQL_ROOT_PASSWORD: change-me-root
+      TZ: Europe/Madrid
     command: ["--default-authentication-plugin=mysql_native_password","--sql-mode="]
     volumes:
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
-  volumes:
-  traefik_letsencrypt: {}
-  mysql_data: {}
+  clinicamv-php:
+    image: ghcr.io/sebasrodmag/clinicamv-php:main
+    container_name: clinicamv-php
+    restart: unless-stopped
+    networks: [web]
+    depends_on:
+      mysql:
+        condition: service_healthy         # 👈 espera a MySQL sano
+    entrypoint: []                         # 👈 borra entrypoint de la imagen
+    command: ["php-fpm","-F"]             # 👈 FPM en foreground
+    volumes:
+      - ./despliegue-asrm/php/www.conf:/usr/local/etc/php-fpm.d/www.conf:ro
+      - ./despliegue-asrm/laravel/.env.prod:/var/www/.env:ro
+    environment:
+      APP_ENV: production
+
+  clinicamv-api:
+    image: ghcr.io/sebasrodmag/clinicamv-api:main
+    container_name: clinicamv-api
+    restart: unless-stopped
+    networks: [web]
+    depends_on: [clinicamv-php]
+    volumes:
+      - ./despliegue-asrm/api:/etc/nginx/conf.d:ro
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.clinicamv_api.rule=Host(`${DOMAIN}`) && PathPrefix(`/clinicamv/api`)
+      - traefik.http.routers.clinicamv_api.entrypoints=websecure
+      - traefik.http.routers.clinicamv_api.tls.certresolver=le
+      - traefik.http.middlewares.strip-clinicamv.stripprefix.prefixes=/clinicamv
+      - traefik.http.routers.clinicamv_api.middlewares=strip-clinicamv
+      - traefik.http.routers.clinicamv_api.priority=30
