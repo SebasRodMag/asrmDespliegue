@@ -71,9 +71,10 @@ services:
 
   clinicamv-php:
     image: ghcr.io/sebasrodmag/clinicamv-php:main
-    entrypoint: ["php-fpm","-F"]
+    entrypoint: []
+    command: ["php-fpm","-F"]
     volumes:
-      - ./despliegue-asrm/php/zzz-listen.conf:/usr/local/etc/php-fpm.d/zzz-listen.conf:ro
+      - ./despliegue-asrm/php/www.conf:/usr/local/etc/php-fpm.d/www.conf:ro
     container_name: clinicamv-php
     restart: unless-stopped
     networks: [web]
