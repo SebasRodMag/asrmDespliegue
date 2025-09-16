@@ -103,6 +103,7 @@ services:
     volumes:
       - ./despliegue-asrm/php/www.conf:/usr/local/etc/php-fpm.d/www.conf:ro
       - ./despliegue-asrm/php/laravel-entrypoint.sh:/usr/local/bin/laravel-entrypoint.sh:ro
+      - ./despliegue-asrm/laravel/.env.prod:/var/www/.env:ro
     environment:
       environment:
       APP_ENV: production
