@@ -90,35 +90,34 @@ services:
       timeout: 5s
       retries: 10
 
-  clinicamv-php:
-    image: ghcr.io/sebasrodmag/clinicamv-php:main
-    container_name: clinicamv-php
-    restart: unless-stopped
-    networks: [web]
-    depends_on:
-      mysql:
-        condition: service_healthy
-    entrypoint: ["/usr/local/bin/laravel-entrypoint.sh"]
-    command: ["php-fpm","-F"]
-    volumes:
-      - ./despliegue-asrm/php/www.conf:/usr/local/etc/php-fpm.d/www.conf:ro
-      - ./despliegue-asrm/php/laravel-entrypoint.sh:/usr/local/bin/laravel-entrypoint.sh:ro
-      - ./despliegue-asrm/laravel/.env.template:/var/www/.env.template:ro
-    environment:
+    clinicamv-php:
+      image: ghcr.io/sebasrodmag/clinicamv-php:main
+      container_name: clinicamv-php
+      restart: unless-stopped
+      networks: [web]
+      depends_on:
+        mysql:
+          condition: service_healthy
+      entrypoint: ["/usr/local/bin/laravel-entrypoint.sh"]
+      volumes:
+        - ./despliegue-asrm/php/www.conf:/usr/local/etc/php-fpm.d/www.conf:ro
+        - ./despliegue-asrm/php/laravel-entrypoint.sh:/usr/local/bin/laravel-entrypoint.sh:ro
+        - ./despliegue-asrm/laravel/.env.template:/var/www/.env.template:ro
       environment:
-      APP_ENV: production
-      DB_CONNECTION: mysql
-      DB_HOST: mysql
-      DB_PORT: 3306
-      DB_DATABASE: clinica_db
-      DB_USERNAME: clinica
-      DB_PASSWORD: clinica
-      CACHE_DRIVER: file
-      CACHE_STORE: file
-      QUEUE_CONNECTION: sync
-      SESSION_DRIVER: file
-      TRUSTED_PROXIES: "*"
-      TZ: Europe/Madrid
+        APP_ENV: production
+        DB_CONNECTION: mysql
+        DB_HOST: mysql
+        DB_PORT: 3306
+        DB_DATABASE: clinica_db
+        DB_USERNAME: clinica
+        DB_PASSWORD: clinica
+        CACHE_DRIVER: file
+        CACHE_STORE: file
+        QUEUE_CONNECTION: sync
+        SESSION_DRIVER: file
+        TRUSTED_PROXIES: "*"
+        TZ: Europe/Madrid
+
 
   clinicamv-api:
     image: ghcr.io/sebasrodmag/clinicamv-api:main
