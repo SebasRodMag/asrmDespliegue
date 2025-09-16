@@ -3,7 +3,7 @@ networks:
 
 volumes:
   traefik_letsencrypt: {}
-  mysql_data: {}
+  mysql_data: {}                 # 👈 volumen declarado arriba (no dentro de servicios)
 
 services:
   traefik:
@@ -103,21 +103,22 @@ services:
     volumes:
       - ./despliegue-asrm/php/www.conf:/usr/local/etc/php-fpm.d/www.conf:ro
       - ./despliegue-asrm/php/laravel-entrypoint.sh:/usr/local/bin/laravel-entrypoint.sh:ro
+      - ./despliegue-asrm/laravel/.env.prod:/var/www/.env:ro
     environment:
-        APP_ENV: production
-        DB_CONNECTION: mysql
-        DB_HOST: mysql
-        DB_PORT: 3306
-        DB_DATABASE: clinica_db
-        DB_USERNAME: clinica
-        DB_PASSWORD: clinica
-        CACHE_DRIVER: file
-        CACHE_STORE: file
-        QUEUE_CONNECTION: sync
-        SESSION_DRIVER: file
-        TRUSTED_PROXIES: "*"
-        TZ: Europe/Madrid
-
+      environment:
+      APP_ENV: production
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: clinica_db
+      DB_USERNAME: clinica
+      DB_PASSWORD: clinica
+      CACHE_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+      SESSION_DRIVER: file
+      TRUSTED_PROXIES: "*"
+      TZ: Europe/Madrid
 
   clinicamv-api:
     image: ghcr.io/sebasrodmag/clinicamv-api:main
