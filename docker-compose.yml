@@ -19,7 +19,7 @@ services:
       ACME_AGREE: "true"
       EMAIL: sebas517@hotmail.com
     volumes:
-      - ./despliegue-asrm/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
       # estáticos del sitio raíz y presentacion
