@@ -1,0 +1,36 @@
+asrm.dev {
+    encode zstd gzip
+
+    # ---- PRESENTACION estático en /presentacion ----
+    handle_path /presentacion* {
+        root * /srv/presentacion
+        file_server
+    }
+
+    # ---- ANGULAR en /clinicamv ----
+    # Opción A: reutilizar el contenedor de frontend (sin recompilar)
+    handle_path /clinicamv* {
+        # si tu build actual referencia /assets sin /clinicamv,
+        # añadimos un parche para /assets más abajo.
+        reverse_proxy clinicamv-frontend:80
+    }
+
+    # Parche para assets pedidos como /assets/... (si Angular no está compilado con base-href=/clinicamv/)
+    handle_path /assets* {
+        reverse_proxy clinicamv-frontend:80
+    }
+
+    # ---- API Laravel en /clinicamv/api ----
+    # handle_path ya quita /clinicamv del path, así dentro queda /api/...
+    handle_path /clinicamv/api* {
+        root * /var/www/public
+        php_fastcgi clinicamv-php:9000
+        # file_server  # no hace falta, php_fastcgi sirve index.php
+    }
+
+    # ---- WEB PERSONAL raíz ----
+    handle {
+        root * /srv/web-personal
+        file_server
+    }
+}

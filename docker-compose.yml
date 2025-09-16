@@ -2,104 +2,34 @@ networks:
   web: {}
 
 volumes:
-  traefik_letsencrypt: {}
   mysql_data: {}
+  caddy_data: {}
+  caddy_config: {}
 
 services:
-  traefik:
-    image: traefik:v2.11
-    container_name: traefik
+  # INGRESS ÚNICO con HTTPS automático
+  caddy:
+    image: caddy:2
+    container_name: caddy
     restart: unless-stopped
-    command:
-      - --providers.docker=true
-      - --providers.docker.exposedbydefault=false
-      - --entrypoints.web.address=:80
-      - --entrypoints.websecure.address=:443
-      - --entrypoints.web.http.redirections.entryPoint.to=websecure
-      - --entrypoints.web.http.redirections.entryPoint.scheme=https
-      - --certificatesresolvers.le.acme.email=${LETSENCRYPT_EMAIL}
-      - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
-      - --certificatesresolvers.le.acme.httpchallenge=true
-      - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
+    networks: [web]
     ports:
       - "80:80"
       - "443:443"
-    networks: [web]
-    volumes:
-      - traefik_letsencrypt:/letsencrypt
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-
-  web-personal:
-    image: nginx:alpine
-    container_name: web-personal
-    restart: unless-stopped
-    networks: [web]
-    volumes:
-      - ./web-personal:/usr/share/nginx/html:ro
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.personal.rule=Host(`${DOMAIN}`) && PathPrefix(`/`)
-      - traefik.http.routers.personal.entrypoints=websecure
-      - traefik.http.routers.personal.tls.certresolver=le
-      - traefik.http.routers.personal.priority=1
-
-  presentacion:
-    image: nginx:alpine
-    container_name: presentacion
-    restart: unless-stopped
-    networks: [web]
-    volumes:
-      - ./presentacion:/usr/share/nginx/html/presentacion:ro
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.presentacion.rule=Host(`${DOMAIN}`) && PathPrefix(`/presentacion`)
-      - traefik.http.routers.presentacion.entrypoints=websecure
-      - traefik.http.routers.presentacion.tls.certresolver=le
-      - traefik.http.routers.presentacion.priority=10
-
-  # FRONTEND Angular servido en /clinicamv
-  clinicamv-frontend:
-    image: ghcr.io/sebasrodmag/clinicamv-frontend:main
-    container_name: clinicamv-frontend
-    restart: unless-stopped
-    networks: [web]
-    volumes:
-      - ./despliegue-asrm/frontend/default.conf:/etc/nginx/conf.d/default.conf:ro
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.clinicamv.rule=Host(`${DOMAIN}`) && PathPrefix(`/clinicamv`)
-      - traefik.http.routers.clinicamv.entrypoints=websecure
-      - traefik.http.routers.clinicamv.tls.certresolver=le
-      - traefik.http.routers.clinicamv.priority=20
-      # strip del prefijo para que el contenedor vea rutas como "/"
-      - traefik.http.middlewares.strip-clinicamv-frontend.stripprefix.prefixes=/clinicamv
-      - traefik.http.routers.clinicamv.middlewares=strip-clinicamv-frontend
-      # parche para assets pedidos como /assets/...
-      - traefik.http.routers.clinicamv_assets.rule=Host(`${DOMAIN}`) && PathPrefix(`/assets`)
-      - traefik.http.routers.clinicamv_assets.entrypoints=websecure
-      - traefik.http.routers.clinicamv_assets.tls.certresolver=le
-      - traefik.http.routers.clinicamv_assets.priority=25
-
-  mysql:
-    image: mysql:8.0
-    container_name: mysql
-    restart: unless-stopped
-    networks: [web]
     environment:
-      MYSQL_DATABASE: clinica_db
-      MYSQL_USER: clinica
-      MYSQL_PASSWORD: clinica
-      MYSQL_ROOT_PASSWORD: change-me-root
-      TZ: Europe/Madrid
-    command: ["--default-authentication-plugin=mysql_native_password","--sql-mode="]
+      # Para que Caddy se registre en ACME con tu correo
+      ACME_AGREE: "true"
+      # No es obligatorio, pero puedes fijar email con: 
+      # EMAIL: sebas517@hotmail.com
     volumes:
-      - mysql_data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+      - ./despliegue-asrm/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+      # estáticos del sitio raíz y presentacion
+      - ./web-personal:/srv/web-personal:ro
+      - ./presentacion:/srv/presentacion:ro
 
+  # PHP-FPM (Laravel)
   clinicamv-php:
     image: ghcr.io/sebasrodmag/clinicamv-php:main
     container_name: clinicamv-php
@@ -108,10 +38,13 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-    entrypoint: ["/usr/local/bin/laravel-entrypoint.sh"]
+    # usa tu entrypoint si lo tienes (opcional)
+    # entrypoint: ["/usr/local/bin/laravel-entrypoint.sh"]
     volumes:
       - ./despliegue-asrm/php/www.conf:/usr/local/etc/php-fpm.d/www.conf:ro
-      - ./despliegue-asrm/php/laravel-entrypoint.sh:/usr/local/bin/laravel-entrypoint.sh:ro
+      # si usas entrypoint + plantilla:
+      # - ./despliegue-asrm/php/laravel-entrypoint.sh:/usr/local/bin/laravel-entrypoint.sh:ro
+      # - ./despliegue-asrm/laravel/.env.template:/var/www/.env.template:ro
     environment:
       APP_ENV: production
       DB_CONNECTION: mysql
@@ -127,20 +60,30 @@ services:
       TRUSTED_PROXIES: "*"
       TZ: Europe/Madrid
 
-
-  clinicamv-api:
-    image: ghcr.io/sebasrodmag/clinicamv-api:main
-    container_name: clinicamv-api
+  # FRONTEND (opcional): si quieres seguir usando la imagen actual
+  clinicamv-frontend:
+    image: ghcr.io/sebasrodmag/clinicamv-frontend:main
+    container_name: clinicamv-frontend
     restart: unless-stopped
     networks: [web]
-    depends_on: [clinicamv-php]
+
+  # DB
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: unless-stopped
+    networks: [web]
+    environment:
+      MYSQL_DATABASE: clinica_db
+      MYSQL_USER: clinica
+      MYSQL_PASSWORD: clinica
+      MYSQL_ROOT_PASSWORD: clinica
+      TZ: Europe/Madrid
+    command: ["--default-authentication-plugin=mysql_native_password","--sql-mode="]
     volumes:
-      - ./despliegue-asrm/api:/etc/nginx/conf.d:ro
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.clinicamv_api.rule=Host(`${DOMAIN}`) && PathPrefix(`/clinicamv/api`)
-      - traefik.http.routers.clinicamv_api.entrypoints=websecure
-      - traefik.http.routers.clinicamv_api.tls.certresolver=le
-      - traefik.http.middlewares.strip-clinicamv.stripprefix.prefixes=/clinicamv
-      - traefik.http.routers.clinicamv_api.middlewares=strip-clinicamv
-      - traefik.http.routers.clinicamv_api.priority=30
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
