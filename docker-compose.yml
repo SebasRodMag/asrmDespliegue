@@ -3,7 +3,7 @@ networks:
 
 volumes:
   traefik_letsencrypt: {}
-  mysql_data: {}                 # 👈 volumen declarado arriba (no dentro de servicios)
+  mysql_data: {}
 
 services:
   traefik:
