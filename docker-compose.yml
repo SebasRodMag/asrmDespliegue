@@ -7,7 +7,6 @@ volumes:
   caddy_config: {}
 
 services:
-  # INGRESS ÚNICO con HTTPS automático
   caddy:
     image: caddy:2
     container_name: caddy
@@ -17,10 +16,8 @@ services:
       - "80:80"
       - "443:443"
     environment:
-      # Para que Caddy se registre en ACME con tu correo
       ACME_AGREE: "true"
-      # No es obligatorio, pero puedes fijar email con: 
-      # EMAIL: sebas517@hotmail.com
+      EMAIL: sebas517@hotmail.com
     volumes:
       - ./despliegue-asrm/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
@@ -29,7 +26,7 @@ services:
       - ./web-personal:/srv/web-personal:ro
       - ./presentacion:/srv/presentacion:ro
 
-  # PHP-FPM (Laravel)
+  # PHP-FPM - Laravel
   clinicamv-php:
     image: ghcr.io/sebasrodmag/clinicamv-php:main
     container_name: clinicamv-php
@@ -38,7 +35,6 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-    # usa tu entrypoint si lo tienes (opcional)
     # entrypoint: ["/usr/local/bin/laravel-entrypoint.sh"]
     volumes:
       - ./despliegue-asrm/php/www.conf:/usr/local/etc/php-fpm.d/www.conf:ro
@@ -60,7 +56,6 @@ services:
       TRUSTED_PROXIES: "*"
       TZ: Europe/Madrid
 
-  # FRONTEND (opcional): si quieres seguir usando la imagen actual
   clinicamv-frontend:
     image: ghcr.io/sebasrodmag/clinicamv-frontend:main
     container_name: clinicamv-frontend
