@@ -99,7 +99,6 @@ services:
       mysql:
         condition: service_healthy
     entrypoint: ["/usr/local/bin/laravel-entrypoint.sh"]
-    command: ["php-fpm","-F"]
     volumes:
       - ./despliegue-asrm/php/www.conf:/usr/local/etc/php-fpm.d/www.conf:ro
       - ./despliegue-asrm/php/laravel-entrypoint.sh:/usr/local/bin/laravel-entrypoint.sh:ro
