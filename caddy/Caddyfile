@@ -16,7 +16,7 @@ asrm.dev {
     reverse_proxy clinicamv-frontend:80
   }
 
-  # Resto de rutas de la SPA
+  # Angular en /clinicamv
   handle_path /clinicamv* {
     reverse_proxy clinicamv-frontend:80
   }
