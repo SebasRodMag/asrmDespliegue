@@ -1,8 +1,7 @@
 asrm.dev {
   encode zstd gzip
 
-  # --- API Laravel en /clinicamv/api  (PRIMERO) ---
-  # handle_path quita /clinicamv del path, quedando /api/...
+  # --- API Laravel en /clinicamv/api ---
   route /clinicamv/api* {
     uri strip_prefix /clinicamv
     root * /var/www/public
