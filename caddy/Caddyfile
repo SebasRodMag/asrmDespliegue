@@ -1,27 +1,33 @@
 asrm.dev {
   encode zstd gzip
 
-  # --- API /clinicamv/api ---
-  route /clinicamv/api* {
+  # --- API: /clinicamv/api/... -> PHP con /api/... ---
+  handle /clinicamv/api/* {
     uri strip_prefix /clinicamv
     root * /var/www/public
     php_fastcgi clinicamv-php:9000
   }
 
-  # --- Frontend Angular /clinicamv ---
-  handle_path /clinicamv* {
+  # --- Frontend Angular: /clinicamv/... -> contenedor frontend ---
+  handle /clinicamv/* {
     reverse_proxy clinicamv-frontend:80
   }
 
-  # --- Presentación ---
+  # --- Presentación estático ---
   handle_path /presentacion* {
     root * /srv/presentacion
     file_server
   }
 
-  # --- Raíz ---
+  # --- Raíz web-personal ---
   handle {
     root * /srv/web-personal
     file_server
   }
+
+  # (opcional) logs para depurar
+  # log {
+  #   output stdout
+  #   format console
+  # }
 }
