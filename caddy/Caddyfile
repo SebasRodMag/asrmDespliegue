@@ -2,9 +2,7 @@ asrm.dev {
     encode zstd gzip
 
     # --- API Laravel en /clinicamv/api ---
-    # Coincide *antes* que el frontend
     route /clinicamv/api/* {
-        # El backend espera /api/... (quitamos /clinicamv)
         uri strip_prefix /clinicamv
         root * /var/www/public
         php_fastcgi clinicamv-php:9000
