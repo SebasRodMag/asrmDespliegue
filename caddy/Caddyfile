@@ -3,17 +3,10 @@ asrm.dev {
 
   # --- API Laravel en /clinicamv/api  (PRIMERO) ---
   # handle_path quita /clinicamv del path, quedando /api/...
-  handle_path /clinicamv/api* {
+  route /clinicamv/api* {
+    uri strip_prefix /clinicamv
     root * /var/www/public
     php_fastcgi clinicamv-php:9000
-  }
-
-  # --- Angular en /clinicamv ---
-  # Parche SOLO para assets bajo /clinicamv (evita romper /assets del sitio raíz)
-  @ngAssets path /clinicamv/assets*, /clinicamv/*.{js,css,svg,png,jpg,webp,ico,woff,woff2}
-  handle @ngAssets {
-    uri strip_prefix /clinicamv
-    reverse_proxy clinicamv-frontend:80
   }
 
   # Angular en /clinicamv
