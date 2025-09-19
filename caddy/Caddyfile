@@ -6,30 +6,32 @@ asrm.dev {
         format console
         level DEBUG
     }
-    # probando con un match más específico
-    # --- API: que Laravel reciba /api/... ---
-    @api path /clinicamv/api*, /clinicamv/api
-    handle @api {
-        uri strip_prefix /clinicamv
-        root * /var/www/public
+
+    # Trato de ver porque las peticiones caen en frontend y no en php
+    # 1) API PRIMERO. Coincide EXACTO y con subrutas.
+    handle_path /clinicamv/api* {
         header {
-            set X-Caddy-Api "1"
+            set X-Caddy-Block api
         }
+        root * /var/www/public
         php_fastcgi clinicamv-php:9000
     }
 
-    # --- Angular bajo /clinicamv ---
+    # 2) Frontend Angular (más general)
     handle_path /clinicamv* {
+        header {
+            set X-Caddy-Block frontend
+        }
         reverse_proxy clinicamv-frontend:80
     }
 
-    # --- Estático /presentacion ---
+    # 3) Estático presentación
     handle_path /presentacion* {
         root * /srv/presentacion
         file_server
     }
 
-    # --- Web personal raíz ---
+    # 4) Raíz web personal
     root * /srv/web-personal
     file_server
 }
