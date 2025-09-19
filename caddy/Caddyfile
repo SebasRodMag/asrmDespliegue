@@ -6,9 +6,8 @@ asrm.dev {
         format console
         level DEBUG
     }
-
-    # --- API Laravel en /clinicamv/api (PRIMERO) ---
-    # handle_path recorta /clinicamv => el backend verá /api/...
+    #evitamos route y usamos handle_path para que acorte el prefijo y deja la ruta como /api/...
+    # --- API Laravel bajo /clinicamv/api (PRIMERO) ---
     handle_path /clinicamv/api* {
         root * /var/www/public
         php_fastcgi clinicamv-php:9000
@@ -25,7 +24,7 @@ asrm.dev {
         file_server
     }
 
-    # --- Web personal (raíz) ---
+    # --- Web personal raíz ---
     root * /srv/web-personal
     file_server
 }
