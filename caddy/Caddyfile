@@ -7,28 +7,25 @@ asrm.dev {
         level DEBUG
     }
 
-    # --- API Laravel en /clinicamv/api ---
-    route /clinicamv/api/* {
-        uri strip_prefix /clinicamv
+    # --- API Laravel en /clinicamv/api (PRIMERO) ---
+    # handle_path recorta /clinicamv => el backend verá /api/...
+    handle_path /clinicamv/api* {
         root * /var/www/public
-        respond /clinicamv/api/_whoami "API BLOCK HIT" 200
         php_fastcgi clinicamv-php:9000
     }
 
-    # --- Angular en /clinicamv ---
-    route /clinicamv/* {
-        uri strip_prefix /clinicamv
+    # --- Angular bajo /clinicamv ---
+    handle_path /clinicamv* {
         reverse_proxy clinicamv-frontend:80
     }
 
-    # --- Presentación /presentacion ---
-    route /presentacion/* {
-        uri strip_prefix /presentacion
+    # --- Estático /presentacion ---
+    handle_path /presentacion* {
         root * /srv/presentacion
         file_server
     }
 
-    # --- Web personal raíz ---
+    # --- Web personal (raíz) ---
     root * /srv/web-personal
     file_server
 }
