@@ -1,6 +1,12 @@
 asrm.dev {
     encode zstd gzip
 
+    log {
+        output stdout
+        format console
+        level DEBUG
+    }
+
     # --- API Laravel en /clinicamv/api ---
     route /clinicamv/api/* {
         uri strip_prefix /clinicamv
