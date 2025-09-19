@@ -5,6 +5,7 @@ asrm.dev {
     route /clinicamv/api/* {
         uri strip_prefix /clinicamv
         root * /var/www/public
+        respond /clinicamv/api/_whoami "API BLOCK HIT" 200
         php_fastcgi clinicamv-php:9000
     }
 
