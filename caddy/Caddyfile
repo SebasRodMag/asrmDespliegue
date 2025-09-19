@@ -6,15 +6,19 @@ asrm.dev {
         format console
         level DEBUG
     }
-
-    # --- API primero: strip solo /clinicamv para que Laravel vea /api/... ---
-    handle /clinicamv/api* {
+    # probando con un match más específico
+    # --- API: que Laravel reciba /api/... ---
+    @api path /clinicamv/api*, /clinicamv/api
+    handle @api {
         uri strip_prefix /clinicamv
         root * /var/www/public
+        header {
+            set X-Caddy-Api "1"
+        }
         php_fastcgi clinicamv-php:9000
     }
 
-    # --- Angular bajo /clinicamv (aquí sí conviene quitar todo el prefijo) ---
+    # --- Angular bajo /clinicamv ---
     handle_path /clinicamv* {
         reverse_proxy clinicamv-frontend:80
     }
@@ -29,4 +33,5 @@ asrm.dev {
     root * /srv/web-personal
     file_server
 }
+
 
