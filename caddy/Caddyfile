@@ -6,14 +6,15 @@ asrm.dev {
         format console
         level DEBUG
     }
-    #evitamos route y usamos handle_path para que acorte el prefijo y deja la ruta como /api/...
-    # --- API Laravel bajo /clinicamv/api (PRIMERO) ---
-    handle_path /clinicamv/api* {
+
+    # --- API primero: strip solo /clinicamv para que Laravel vea /api/... ---
+    handle /clinicamv/api* {
+        uri strip_prefix /clinicamv
         root * /var/www/public
         php_fastcgi clinicamv-php:9000
     }
 
-    # --- Angular bajo /clinicamv ---
+    # --- Angular bajo /clinicamv (aquí sí conviene quitar todo el prefijo) ---
     handle_path /clinicamv* {
         reverse_proxy clinicamv-frontend:80
     }
@@ -28,3 +29,4 @@ asrm.dev {
     root * /srv/web-personal
     file_server
 }
+
