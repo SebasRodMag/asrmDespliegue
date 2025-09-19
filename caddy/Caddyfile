@@ -8,7 +8,7 @@ asrm.dev {
     }
     # corrección del match de la ruta que llega a Laravel quitando unicamente /clinicamv
     # --- API: que Laravel reciba /api/... ---
-@api path /clinicamv/api /clinicamv/api
+    @api path /clinicamv/api /clinicamv/api
     handle @api {
         header {
             set X-Caddy-Block api
