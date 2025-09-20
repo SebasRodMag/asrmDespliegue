@@ -5,25 +5,23 @@ asrm.dev {
         level DEBUG
     }
 
-    # API Laravel: conserva /api en la URI
-    handle /clinicamv/api* {
-        uri strip_prefix /clinicamv   # => /api/...
+    handle_path /clinicamv* {
+        @api path /api*
+        handle @api {
         root * /var/www/public
         php_fastcgi clinicamv-php:9000
-    }
-
-    # Frontend Angular
-    handle_path /clinicamv* {
+        }
+        handle {
         reverse_proxy clinicamv-frontend:80
+        }
     }
 
-    # Estático /presentacion
     handle_path /presentacion* {
         root * /srv/presentacion
         file_server
     }
 
-    # Raíz
     root * /srv/web-personal
     file_server
 }
+
