@@ -5,21 +5,15 @@ asrm.dev {
         level DEBUG
     }
 
-    # --- API Laravel: /clinicamv/api -> PHP-FPM (Caddy quita /clinicamv)
-    handle_path /clinicamv/api* {
-        # (Opcional) para trazar por headers:
-        # header {
-        #   set X-Caddy-Block api
-        #   set X-Debug-URI {uri}
-        # }
-
+    # API Laravel: conserva /api en la URI
+    handle /clinicamv/api* {
+        uri strip_prefix /clinicamv   # => /api/...
         root * /var/www/public
-        php_fastcgi clinicamv-php:9000   # incluye fallback a index.php con la URI
+        php_fastcgi clinicamv-php:9000
     }
 
-    # --- Frontend Angular: resto bajo /clinicamv
+    # Frontend Angular
     handle_path /clinicamv* {
-        # header { set X-Caddy-Block frontend set X-Debug-URI {uri} }
         reverse_proxy clinicamv-frontend:80
     }
 
