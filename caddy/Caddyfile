@@ -7,29 +7,33 @@ asrm.dev {
         level DEBUG
     }
 
-    @api {
-        path /clinicamv/api /clinicamv/api/*
-    }
-    handle @api {
+    # --- API Laravel bajo /clinicamv/api ---
+    handle_path /clinicamv/api* {
         header {
             defer
             set X-Caddy-Block api
         }
-        uri strip_prefix /clinicamv    # /clinicamv/api/... -> /api/...
         root * /var/www/public
+
+        # Fuerza fallback a index.php si no hay archivo físico
+        try_files {path} {path}/ /index.php?{query}
+
         php_fastcgi clinicamv-php:9000
     }
 
+    # --- Angular bajo /clinicamv ---
     handle_path /clinicamv* {
         header { set X-Caddy-Block frontend }
         reverse_proxy clinicamv-frontend:80
     }
 
+    # --- Estático /presentacion ---
     handle_path /presentacion* {
         root * /srv/presentacion
         file_server
     }
 
+    # --- Raíz ---
     root * /srv/web-personal
     file_server
 }
