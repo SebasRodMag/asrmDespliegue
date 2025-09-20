@@ -1,17 +1,18 @@
 asrm.dev {
-    log {
-        output stdout
-        format console
-        level DEBUG
-    }
+  log {
+    output stdout
+    format console
+    level DEBUG
+  }
 
-    handle /clinicamv/api* {
-        respond 200 "API MATCH {uri}\n"
-    }
+  handle /clinicamv/api* {
+    respond "API MATCH {uri}\n" 200
+    # o simplemente: respond "API MATCH {uri}\n"
+  }
 
-    handle_path /clinicamv* {
-        respond 200 "FRONT MATCH {uri}\n"
-    }
+  handle_path /clinicamv* {
+    respond "FRONT MATCH {uri}\n" 200
+  }
 
-    respond 404 "NO MATCH {uri}\n"
+  respond "NO MATCH {uri}\n" 404
 }
