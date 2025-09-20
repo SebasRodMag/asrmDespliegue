@@ -1,18 +1,39 @@
 asrm.dev {
-  log {
-    output stdout
-    format console
-    level DEBUG
-  }
+    log {
+        output stdout
+        format console
+        level DEBUG
+    }
 
-  handle /clinicamv/api* {
-    respond "API MATCH {uri}\n" 200
-    # o simplemente: respond "API MATCH {uri}\n"
-  }
+    # --- API Laravel: /clinicamv/api... ---
+    @api path /clinicamv/api /clinicamv/api/*
+    handle @api {
+        header {
+            set X-Caddy-Block api
+            set X-Debug-URI {uri}
+        }
+        uri strip_prefix /clinicamv     # Laravel ve /api/...
+        root * /var/www/public
+        try_files {path} {path}/ /index.php?{query}
+        php_fastcgi clinicamv-php:9000
+    }
 
-  handle_path /clinicamv* {
-    respond "FRONT MATCH {uri}\n" 200
-  }
+    # --- Frontend Angular (catch-all) ---
+    handle_path /clinicamv* {
+        header {
+            set X-Caddy-Block frontend
+            set X-Debug-URI {uri}
+        }
+        reverse_proxy clinicamv-frontend:80
+    }
 
-  respond "NO MATCH {uri}\n" 404
+    # --- Estático /presentacion ---
+    handle_path /presentacion* {
+        root * /srv/presentacion
+        file_server
+    }
+
+    # --- Raíz ---
+    root * /srv/web-personal
+    file_server
 }
