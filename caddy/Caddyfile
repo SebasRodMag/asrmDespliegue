@@ -7,31 +7,30 @@ asrm.dev {
         level DEBUG
     }
 
-    # --- API Laravel bajo /clinicamv/api ---
-    @api path /clinicamv/api /clinicamv/api/*
-    handle @api {
-        header { set X-Caddy-Block api }
-        uri strip_prefix /clinicamv   # Laravel ve /api/...
-        root * /var/www/public
-
-        # usando try_files mediante index.php sin {uri}
-        try_files {path} {path}/ /index.php
-        php_fastcgi clinicamv-php:9000
-    }
-
-    # --- Angular bajo /clinicamv ---
+    # Todo lo que venga por /clinicamv ...
     handle_path /clinicamv* {
+        # A partir de aquí, la URI ya no tiene /clinicamv.
+        # i.e. /clinicamv/api/color-tema -> /api/color-tema
+
+        @api path /api /api/*
+        handle @api {
+            header { set X-Caddy-Block api }
+            root * /var/www/public
+            php_fastcgi clinicamv-php:9000   # dejar el fallback a index.php a cargo de Caddy
+        }
+
+        # Resto bajo /clinicamv -> Angular
         header { set X-Caddy-Block frontend }
         reverse_proxy clinicamv-frontend:80
     }
 
-    # --- Estático /presentacion ---
+    # Estático /presentacion
     handle_path /presentacion* {
         root * /srv/presentacion
         file_server
     }
 
-    # --- Raíz ---
+    # Raíz
     root * /srv/web-personal
     file_server
 }
