@@ -11,6 +11,11 @@ asrm.dev {
     @api {
         path /clinicamv/api /clinicamv/api/*
     }
+
+    handle @api {
+        respond 200 "API matched" 
+        # solo para comprobar
+    }
     handle @api {
         header { set X-Caddy-Block api }
         uri strip_prefix /clinicamv    # /clinicamv/api/... -> /api/...
