@@ -6,40 +6,34 @@ asrm.dev {
         format console
         level DEBUG
     }
-    # sin usar try_files para que laravel lo maneje todo
-    # --- API: que Laravel reciba /api/... ---
+
     @api {
         path /clinicamv/api /clinicamv/api/*
     }
-
     handle @api {
-        respond 200 "API matched" 
-        # solo para comprobar
-    }
-    handle @api {
-        header { set X-Caddy-Block api }
+        header {
+            defer
+            set X-Caddy-Block api
+        }
         uri strip_prefix /clinicamv    # /clinicamv/api/... -> /api/...
-
         root * /var/www/public
-        php_fastcgi clinicamv-php:9000  # deja a Caddy hacer el fallback a /index.php
+        php_fastcgi clinicamv-php:9000
     }
 
-    # --- Angular bajo /clinicamv ---
     handle_path /clinicamv* {
         header { set X-Caddy-Block frontend }
         reverse_proxy clinicamv-frontend:80
     }
 
-    # --- Estático /presentacion ---
     handle_path /presentacion* {
         root * /srv/presentacion
         file_server
     }
 
-    # --- Raíz ---
     root * /srv/web-personal
     file_server
 }
+
 
 
 
