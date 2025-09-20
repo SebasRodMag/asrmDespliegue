@@ -7,19 +7,20 @@ asrm.dev {
         level DEBUG
     }
 
-    # --- API Laravel: manejar /clinicamv/api... de forma directa ---
-    handle_path /clinicamv/api* {
-        # aquí ya quedó strippeado /clinicamv → la URI es /api/...
+    # --- API Laravel: /clinicamv/api... ->
+    #     strip solo /clinicamv para que Laravel vea /api/...
+    handle /clinicamv/api* {
         header {
             set X-Caddy-Block api
             set X-Debug-URI {uri}
         }
+        uri strip_prefix /clinicamv        # /clinicamv/api/... -> /api/...
         root * /var/www/public
-        rewrite * /index.php         # front-controller de Laravel
+        try_files {path} {path}/ /index.php{uri}?{query}   # conserva la URI
         php_fastcgi clinicamv-php:9000
     }
 
-    # --- Frontend Angular (catch-all bajo /clinicamv) ---
+    # --- Frontend Angular (catch-all) ---
     handle_path /clinicamv* {
         header {
             set X-Caddy-Block frontend
