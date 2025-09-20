@@ -7,21 +7,27 @@ asrm.dev {
         level DEBUG
     }
 
-    # Todo lo que venga por /clinicamv ...
+    # Todo lo de /clinicamv entra aquí y se strippea /clinicamv
     handle_path /clinicamv* {
-        # A partir de aquí, la URI ya no tiene /clinicamv.
-        # i.e. /clinicamv/api/color-tema -> /api/color-tema
-
-        @api path /api /api/*
+        # --- API: /api... -> Laravel ---
+        @api path /api*
         handle @api {
-            header { set X-Caddy-Block api }
+            header {
+                set X-Caddy-Block api
+                set X-Debug-URI {uri}        # debería verse /api/...
+            }
             root * /var/www/public
-            php_fastcgi clinicamv-php:9000   # dejar el fallback a index.php a cargo de Caddy
+            php_fastcgi clinicamv-php:9000   # fallback automático a /index.php
         }
 
-        # Resto bajo /clinicamv -> Angular
-        header { set X-Caddy-Block frontend }
-        reverse_proxy clinicamv-frontend:80
+        # --- Frontend Angular (catch-all) ---
+        handle {
+            header {
+                set X-Caddy-Block frontend
+                set X-Debug-URI {uri}
+            }
+            reverse_proxy clinicamv-frontend:80
+        }
     }
 
     # Estático /presentacion
