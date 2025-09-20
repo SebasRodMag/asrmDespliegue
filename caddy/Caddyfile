@@ -1,40 +1,17 @@
 asrm.dev {
-    encode zstd gzip
-
     log {
         output stdout
         format console
         level DEBUG
     }
 
-    # --- API /clinicamv/api... -> Laravel ---
-    @api path /clinicamv/api /clinicamv/api/*
-    handle @api {
-        header {
-            set X-Caddy-Block api
-            set X-Debug-URI {uri}
-        }
-        uri strip_prefix /clinicamv     # => Laravel ve /api/...
-        root * /var/www/public
-        php_fastcgi clinicamv-php:9000  # fallback automático a /index.php
+    handle /clinicamv/api* {
+        respond 200 "API MATCH {uri}\n"
     }
 
-    # --- Frontend Angular (catch-all) ---
     handle_path /clinicamv* {
-        header {
-            set X-Caddy-Block frontend
-            set X-Debug-URI {uri}
-        }
-        reverse_proxy clinicamv-frontend:80
+        respond 200 "FRONT MATCH {uri}\n"
     }
 
-    # --- Estático /presentacion ---
-    handle_path /presentacion* {
-        root * /srv/presentacion
-        file_server
-    }
-
-    # --- Raíz ---
-    root * /srv/web-personal
-    file_server
+    respond 404 "NO MATCH {uri}\n"
 }
