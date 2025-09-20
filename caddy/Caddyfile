@@ -6,22 +6,17 @@ asrm.dev {
     }
 
     # --- API Laravel bajo /clinicamv/api... ---
+    # OJO: handle (no handle_path) y strip solo /clinicamv
     handle /clinicamv/api* {
         header {
             set X-Caddy-Block api
             set X-Debug-URI {uri}
         }
-        uri strip_prefix /clinicamv      # -> Laravel ve /api/...
+        uri strip_prefix /clinicamv      # => Laravel verá /api/...
+        root * /var/www/public
 
-        # Front-controller SIEMPRE (deja a Laravel rutear)
-        rewrite * /index.php
-
-        # Muy importante: root dentro del bloque de php_fastcgi
-        php_fastcgi clinicamv-php:9000 {
-            root /var/www/public
-            index index.php
-            try_files {path} {path}/index.php index.php
-        }
+        # ¡Sin rewrite! Deja que php_fastcgi haga el try_files interno
+        php_fastcgi clinicamv-php:9000
     }
 
     # --- Frontend Angular (catch-all bajo /clinicamv) ---
