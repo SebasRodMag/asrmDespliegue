@@ -6,7 +6,6 @@ asrm.dev {
         format console
         level DEBUG
     }
-    #corrección de la ruta de prueba
     # --- API: que Laravel reciba /api/... ---
     @api {
         path /clinicamv/api /clinicamv/api/*
