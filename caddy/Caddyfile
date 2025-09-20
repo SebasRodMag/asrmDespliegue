@@ -5,36 +5,33 @@ asrm.dev {
         level DEBUG
     }
 
-    # --- API Laravel bajo /clinicamv/api... ---
-    # OJO: handle (no handle_path) y strip solo /clinicamv
-    handle /clinicamv/api* {
-        header {
-            set X-Caddy-Block api
-            set X-Debug-URI {uri}
-        }
-        uri strip_prefix /clinicamv      # => Laravel verá /api/...
-        root * /var/www/public
-
-        # ¡Sin rewrite! Deja que php_fastcgi haga el try_files interno
-        php_fastcgi clinicamv-php:9000
-    }
-
-    # --- Frontend Angular (catch-all bajo /clinicamv) ---
+    # Todo lo que cuelga de /clinicamv...
     handle_path /clinicamv* {
-        header {
-            set X-Caddy-Block frontend
-            set X-Debug-URI {uri}
+        # 1) API Laravel: ya entramos sin /clinicamv → la URI aquí es /api/...
+        @api path /api*
+        handle @api {
+            # (Opcional) cabeceras de depuración:
+            # header {
+            #     set X-Caddy-Block api
+            #     set X-Debug-URI {uri}
+            # }
+
+            root * /var/www/public
+            php_fastcgi clinicamv-php:9000   # fallback automático a /index.php
         }
+
+        # 2) Resto → Angular (catch-all)
+        # header { set X-Caddy-Block frontend set X-Debug-URI {uri} }
         reverse_proxy clinicamv-frontend:80
     }
 
-    # --- Estático /presentacion ---
+    # Estático /presentacion
     handle_path /presentacion* {
         root * /srv/presentacion
         file_server
     }
 
-    # --- Raíz ---
+    # Raíz
     root * /srv/web-personal
     file_server
 }
