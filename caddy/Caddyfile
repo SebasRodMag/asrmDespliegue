@@ -8,16 +8,12 @@ asrm.dev {
     }
 
     # --- API Laravel bajo /clinicamv/api ---
-    handle_path /clinicamv/api* {
-        header {
-            defer
-            set X-Caddy-Block api
-        }
+    @api path /clinicamv/api /clinicamv/api/*
+    handle @api {
+        header { set X-Caddy-Block api }
+        uri strip_prefix /clinicamv         # => Laravel ve /api/...
         root * /var/www/public
-
-        # Fuerza fallback a index.php si no hay archivo físico
-        try_files {path} {path}/ /index.php?{query}
-
+        try_files {path} {path}/ /index.php{uri}?{query}
         php_fastcgi clinicamv-php:9000
     }
 
@@ -37,6 +33,7 @@ asrm.dev {
     root * /srv/web-personal
     file_server
 }
+
 
 
 
