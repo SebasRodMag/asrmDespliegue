@@ -6,21 +6,25 @@ asrm.dev {
         format console
         level DEBUG
     }
-    # Corrección del matches de API por falta de llaves
+    # faltaban caracteres en el patron del matches
     # --- API: que Laravel reciba /api/... ---
     @api {
         path /clinicamv/api /clinicamv/api/*
     }
     handle @api {
-        header { set X-Caddy-Block api }
-        uri strip_prefix /clinicamv     # deja /api/...
+        header {
+            set X-Caddy-Block api
+        }
+        uri strip_prefix /clinicamv   # deja /api/...
         root * /var/www/public
         php_fastcgi clinicamv-php:9000
     }
 
     # --- Angular bajo /clinicamv ---
     handle_path /clinicamv* {
-        header { set X-Caddy-Block frontend }
+        header {
+            set X-Caddy-Block frontend
+        }
         reverse_proxy clinicamv-frontend:80
     }
 
@@ -34,3 +38,4 @@ asrm.dev {
     root * /srv/web-personal
     file_server
 }
+
