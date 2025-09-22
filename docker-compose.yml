@@ -38,14 +38,14 @@ services:
       SANCTUM_STATEFUL_DOMAINS: app.asrm.dev
       LOG_CHANNEL: stderr
     volumes:
-      - ./backend:/var/www/html
+      - ./clinica-backend:/var/www/html
     networks: [web]
 
   api:
     image: ghcr.io/sebasrodmag/clinicamv-api:latest  # nginx para Laravel
     depends_on: [php]
     volumes:
-      - ./backend:/var/www/html:ro
+      - ./clinica-backend:/var/www/html:ro
       - ./infra/nginx/laravel.conf:/etc/nginx/conf.d/default.conf:ro
     labels:
       - traefik.enable=true
