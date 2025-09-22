@@ -19,30 +19,18 @@ services:
       - ./letsencrypt:/letsencrypt
     networks: [web]
 
-  frontend:
-    image: ghcr.io/sebasrodmag/clinicamv-frontend:latest
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.front.rule=Host(`app.asrm.dev`)
-      - traefik.http.routers.front.entrypoints=websecure
-      - traefik.http.routers.front.tls.certresolver=lets
-      - traefik.http.services.front.loadbalancer.server.port=80
-    networks: [web]
-
   php:
-    image: ghcr.io/sebasrodmag/clinicamv-php:latest
+    image: ghcr.io/sebasrodmag/clinicamv-php:main
+    volumes:
+      - ./clinica-backend:/var/www/html
     environment:
       APP_ENV: production
       APP_URL: https://api.asrm.dev
-      SESSION_DOMAIN: .asrm.dev
-      SANCTUM_STATEFUL_DOMAINS: app.asrm.dev
       LOG_CHANNEL: stderr
-    volumes:
-      - ./clinica-backend:/var/www/html
     networks: [web]
 
   api:
-    image: ghcr.io/sebasrodmag/clinicamv-api:latest  # nginx para Laravel
+    image: ghcr.io/sebasrodmag/clinicamv-api:main
     depends_on: [php]
     volumes:
       - ./clinica-backend:/var/www/html:ro
@@ -53,4 +41,14 @@ services:
       - traefik.http.routers.api.entrypoints=websecure
       - traefik.http.routers.api.tls.certresolver=lets
       - traefik.http.services.api.loadbalancer.server.port=80
+    networks: [web]
+
+  frontend:
+    image: ghcr.io/sebasrodmag/clinicamv-frontend:main
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.front.rule=Host(`app.asrm.dev`)
+      - traefik.http.routers.front.entrypoints=websecure
+      - traefik.http.routers.front.tls.certresolver=lets
+      - traefik.http.services.front.loadbalancer.server.port=80
     networks: [web]
